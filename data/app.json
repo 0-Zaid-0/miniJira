@@ -1,0 +1,32 @@
+{
+    "projects": [
+        {
+            "id": "3ff6fc761c7cf055",
+            "name": "test",
+            "created_at": "2026-10-14"
+        }
+    ],
+    "teammates": [
+        {
+            "id": "4b7c1fb1bb4763df",
+            "name": "zaid"
+        },
+        {
+            "id": "4c76ba8db4a089a8",
+            "name": "mo"
+        },
+        {
+            "id": "039643c25c88eb03",
+            "name": "john"
+        }
+    ],
+    "tasks": [
+        {
+            "id": "f4120c2c5b8fd188",
+            "project_id": "3ff6fc761c7cf055",
+            "title": "dsd",
+            "status": "in_progress",
+            "assignee_id": "4b7c1fb1bb4763df"
+        }
+    ]
+}

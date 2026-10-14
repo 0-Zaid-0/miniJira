@@ -1,15 +1,34 @@
-# Mini Jira
+# Mini Jira — Week 1 (PHP)
 
-A simple project tracker for our team.
+A simple project tracker built with **PHP + CSS**.
 
-We use it to create tasks, assign them to people, and track progress — like a small version of Jira.
+## Week 1 features
 
-## Goals
+- Create / rename / delete projects
+- Manage teammates
+- Kanban board: Todo → In Progress → Done
+- Create / edit / delete tasks
+- Assign teammates
+- Move tasks with a status dropdown
+- Save data in a JSON file (`data/app.json`)
 
-- Create and manage tasks
-- Assign work to teammates
-- See what is done and what is still open
+## How to run
 
-## Getting started
+You need PHP installed.
 
-This repo is new. More details will be added as we build the project.
+```bash
+php -S localhost:8000
+```
+
+Open [http://localhost:8000](http://localhost:8000)
+
+## Main files
+
+| File | What it does |
+|------|----------------|
+| `index.php` | Projects page |
+| `teammates.php` | Teammates page |
+| `board.php` | Kanban board |
+| `actions.php` | Handles form submits |
+| `includes/data.php` | Load/save JSON data |
+| `assets/style.css` | Look and layout |
