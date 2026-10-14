@@ -18,7 +18,7 @@ if (!isset($pageSubtitle)) {
 <header class="topbar">
     <div class="wrap topbar-inner">
         <div>
-            <a class="brand" href="index.php">Mini Jira <span class="badge">Week 1</span></a>
+            <a class="brand" href="index.php">Mini Jira <span class="badge badge-new">NEW UPDATE</span></a>
             <?php if ($pageSubtitle !== ''): ?>
                 <p class="subtitle"><?= h($pageSubtitle) ?></p>
             <?php endif; ?>

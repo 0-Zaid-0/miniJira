@@ -8,8 +8,9 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <section class="panel">
+    <p class="note">If you can read this, you are running the latest code.</p>
     <h1>Projects</h1>
-    <p class="muted">Add a project, then open its board to track tasks.</p>
+    <p class="muted">Add a project, then open its board to track tasks. (UI update test)</p>
 
     <form class="row-form" method="post" action="actions.php">
         <input type="hidden" name="action" value="add_project">

@@ -60,6 +60,11 @@ a { color: var(--sky); text-decoration: none; }
   text-transform: uppercase;
 }
 
+.badge-new {
+  background: #16a34a;
+  color: #fff;
+}
+
 .subtitle, .muted {
   color: var(--muted);
   margin: 0.25rem 0 0;
