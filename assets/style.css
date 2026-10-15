@@ -65,9 +65,13 @@ a { color: var(--sky); text-decoration: none; }
   color: #fff;
 }
 
-.subtitle, .muted {
+.muted {
   color: var(--muted);
   margin: 0.25rem 0 0;
+}
+
+.subtitle {
+	margin: 0.25rem 0 0;
 }
 
 .nav { display: flex; gap: 0.75rem; }
@@ -104,6 +108,9 @@ a { color: var(--sky); text-decoration: none; }
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.row-form, .stack-form {
   margin-top: 0.75rem;
 }
 
@@ -156,6 +163,7 @@ button, .btn {
   color: #0c4a6e;
   padding: 0.75rem 1rem;
   border-radius: 0.55rem;
+  margin-top: 0px;
 }
 
 .board {
