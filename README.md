@@ -17,7 +17,7 @@ A simple project tracker built with **PHP + CSS**.
 You need PHP installed.
 
 ```bash
-php -S localhost:8000
+php -S localhost:8000 router.php
 ```
 
 Open [http://localhost:8000](http://localhost:8000)
@@ -32,3 +32,4 @@ Open [http://localhost:8000](http://localhost:8000)
 | `actions.php` | Handles form submits |
 | `includes/data.php` | Load/save JSON data |
 | `assets/style.css` | Look and layout |
+| `router.php` | Routes HTTP requests |
