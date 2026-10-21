@@ -1,6 +1,8 @@
 <?php
 // router.php - PHP built-in server router with security controls
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 // Get the requested path
 $requestedPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestedPath = urldecode($requestedPath);

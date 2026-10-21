@@ -1,6 +1,5 @@
 <?php
 // Simple JSON file storage for Mini Jira (Week 1)
-
 define('DATA_FILE', __DIR__ . '/../data/app.json');
 
 function load_data(): array
