@@ -2,7 +2,7 @@
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/data.php';
 
-$data = load_data();
+$teammates = repo()->teammates();
 $pageTitle = 'Teammates';
 $pageSubtitle = 'People you can assign to tasks';
 require __DIR__ . '/includes/header.php';
@@ -19,14 +19,14 @@ require __DIR__ . '/includes/header.php';
     </form>
 </section>
 
-<?php if (count($data['teammates']) === 0): ?>
+<?php if (count($teammates) === 0): ?>
     <section class="empty">
         <h2>No teammates yet</h2>
         <p>Add someone so you can assign work on the board.</p>
     </section>
 <?php else: ?>
     <section class="list">
-        <?php foreach ($data['teammates'] as $teammate): ?>
+        <?php foreach ($teammates as $teammate): ?>
             <article class="card">
                 <div class="card-main">
                     <h2><?= h($teammate['name']) ?></h2>

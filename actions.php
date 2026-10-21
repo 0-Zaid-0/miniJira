@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 require_once __DIR__ . '/includes/data.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -7,18 +10,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $action = $_POST['action'] ?? '';
-$data = load_data();
+$r = repo();
 
 switch ($action) {
     case 'add_project':
         $name = trim($_POST['name'] ?? '');
         if ($name !== '') {
-            $data['projects'][] = [
-                'id' => new_id(),
-                'name' => $name,
-                'created_at' => date('Y-m-d'),
-            ];
-            save_data($data);
+            $r->insertProject(new_id(), $name);
         }
         header('Location: index.php');
         exit;
@@ -27,40 +25,23 @@ switch ($action) {
         $id = $_POST['id'] ?? '';
         $name = trim($_POST['name'] ?? '');
         if ($id !== '' && $name !== '') {
-            foreach ($data['projects'] as &$project) {
-                if ($project['id'] === $id) {
-                    $project['name'] = $name;
-                    break;
-                }
-            }
-            unset($project);
-            save_data($data);
+            $r->renameProject($id, $name);
         }
         header('Location: index.php');
         exit;
 
     case 'delete_project':
         $id = $_POST['id'] ?? '';
-        $data['projects'] = array_values(array_filter(
-            $data['projects'],
-            fn($p) => $p['id'] !== $id
-        ));
-        $data['tasks'] = array_values(array_filter(
-            $data['tasks'],
-            fn($t) => $t['project_id'] !== $id
-        ));
-        save_data($data);
+        if ($id !== '') {
+            $r->deleteProject($id);
+        }
         header('Location: index.php');
         exit;
 
     case 'add_teammate':
         $name = trim($_POST['name'] ?? '');
         if ($name !== '') {
-            $data['teammates'][] = [
-                'id' => new_id(),
-                'name' => $name,
-            ];
-            save_data($data);
+            $r->insertTeammate(new_id(), $name);
         }
         header('Location: teammates.php');
         exit;
@@ -69,31 +50,16 @@ switch ($action) {
         $id = $_POST['id'] ?? '';
         $name = trim($_POST['name'] ?? '');
         if ($id !== '' && $name !== '') {
-            foreach ($data['teammates'] as &$teammate) {
-                if ($teammate['id'] === $id) {
-                    $teammate['name'] = $name;
-                    break;
-                }
-            }
-            unset($teammate);
-            save_data($data);
+            $r->renameTeammate($id, $name);
         }
         header('Location: teammates.php');
         exit;
 
     case 'delete_teammate':
         $id = $_POST['id'] ?? '';
-        $data['teammates'] = array_values(array_filter(
-            $data['teammates'],
-            fn($t) => $t['id'] !== $id
-        ));
-        foreach ($data['tasks'] as &$task) {
-            if (($task['assignee_id'] ?? null) === $id) {
-                $task['assignee_id'] = null;
-            }
+        if ($id !== '') {
+            $r->deleteTeammate($id);
         }
-        unset($task);
-        save_data($data);
         header('Location: teammates.php');
         exit;
 
@@ -103,14 +69,8 @@ switch ($action) {
         $status = $_POST['status'] ?? 'todo';
         $assigneeId = $_POST['assignee_id'] ?? '';
         if ($projectId !== '' && $title !== '') {
-            $data['tasks'][] = [
-                'id' => new_id(),
-                'project_id' => $projectId,
-                'title' => $title,
-                'status' => in_array($status, ['todo', 'in_progress', 'done'], true) ? $status : 'todo',
-                'assignee_id' => $assigneeId !== '' ? $assigneeId : null,
-            ];
-            save_data($data);
+            $status = in_array($status, ['todo', 'in_progress', 'done'], true) ? $status : 'todo';
+            $r->insertTask(new_id(), $projectId, $title, $status, $assigneeId ?: null);
         }
         header('Location: board.php?id=' . urlencode($projectId));
         exit;
@@ -121,15 +81,7 @@ switch ($action) {
         $title = trim($_POST['title'] ?? '');
         $assigneeId = $_POST['assignee_id'] ?? '';
         if ($taskId !== '' && $title !== '') {
-            foreach ($data['tasks'] as &$task) {
-                if ($task['id'] === $taskId) {
-                    $task['title'] = $title;
-                    $task['assignee_id'] = $assigneeId !== '' ? $assigneeId : null;
-                    break;
-                }
-            }
-            unset($task);
-            save_data($data);
+            $r->updateTask($taskId, $title, $assigneeId ?: null);
         }
         header('Location: board.php?id=' . urlencode($projectId));
         exit;
@@ -139,14 +91,7 @@ switch ($action) {
         $projectId = $_POST['project_id'] ?? '';
         $status = $_POST['status'] ?? 'todo';
         if ($taskId !== '' && in_array($status, ['todo', 'in_progress', 'done'], true)) {
-            foreach ($data['tasks'] as &$task) {
-                if ($task['id'] === $taskId) {
-                    $task['status'] = $status;
-                    break;
-                }
-            }
-            unset($task);
-            save_data($data);
+            $r->moveTask($taskId, $status);
         }
         header('Location: board.php?id=' . urlencode($projectId));
         exit;
@@ -154,11 +99,9 @@ switch ($action) {
     case 'delete_task':
         $taskId = $_POST['task_id'] ?? '';
         $projectId = $_POST['project_id'] ?? '';
-        $data['tasks'] = array_values(array_filter(
-            $data['tasks'],
-            fn($t) => $t['id'] !== $taskId
-        ));
-        save_data($data);
+        if ($taskId !== '') {
+            $r->deleteTask($taskId);
+        }
         header('Location: board.php?id=' . urlencode($projectId));
         exit;
 }

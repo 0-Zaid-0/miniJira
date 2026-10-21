@@ -2,7 +2,7 @@
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/data.php';
 
-$data = load_data();
+$projects = repo()->projects();
 $pageTitle = 'Projects';
 $pageSubtitle = 'Create projects and open a board';
 require __DIR__ . '/includes/header.php';
@@ -20,18 +20,18 @@ require __DIR__ . '/includes/header.php';
     </form>
 </section>
 
-<?php if (count($data['projects']) === 0): ?>
+<?php if (count($projects) === 0): ?>
     <section class="empty">
         <h2>No projects yet</h2>
         <p>Make your first project above to get started.</p>
     </section>
 <?php else: ?>
     <section class="list">
-        <?php foreach (array_reverse($data['projects']) as $project): ?>
+        <?php foreach (array_reverse($projects) as $project): ?>
             <article class="card">
                 <div class="card-main">
                     <h2><?= h($project['name']) ?></h2>
-                    <p class="muted">Created <?= h($project['created_at'] ?? '') ?></p>
+                    <p class="muted">Created <?= h(substr($project['created_at'], 0, 10)) ?></p>
                 </div>
                 <div class="card-actions">
                     <a class="btn" href="board.php?id=<?= urlencode($project['id']) ?>">Open board</a>

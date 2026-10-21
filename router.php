@@ -7,45 +7,47 @@ require_once __DIR__ . '/vendor/autoload.php';
 $requestedPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestedPath = urldecode($requestedPath);
 
-// Define blocked patterns (case-insensitive)
+// Define blocked patterns (case-insensitive, ~ delimiter)
 $blockedPatterns = [
     // Version control
-    '/\/\.git(\/|$)/i',
-    '/\/\.svn(\/|$)/i',
-    '/\/\.hg(\/|$)/i',
-    '/\/\.bzr(\/|$)/i',
-    '/\/CVS(\/|$)/i',
-    
+    '~/\.git(/|$)~i',
+    '~/\.svn(/|$)~i',
+    '~/\.hg(/|$)~i',
+    '~/\.bzr(/|$)~i',
+    '~/CVS(/|$)~i',
+
     // Hidden files at any level (dotfiles)
-    '/\/\.[^\/]+$/i',
-    
+    '~/\.[^/]+$~i',
+
     // Common sensitive files
-    '/\/\.env(\.|$)/i',
-    '/\/\.htaccess$/i',
-    '/\/\.htpasswd$/i',
-    '/\/\.gitignore$/i',
-    '/\/\.gitattributes$/i',
-    '/\/\.gitmodules$/i',
-    '/\/composer\.(json|lock)$/i',
-    '/\/package(-lock)?\.json$/i',
-    '/\/yarn\.lock$/i',
-    '/\/\.DS_Store$/i',
-    '/\/Thumbs\.db$/i',
-    '/\/web\.config$/i',
-    
+    '~/\.env(\.|$)~i',
+    '~/\.htaccess$~i',
+    '~/\.htpasswd$~i',
+    '~/\.gitignore$~i',
+    '~/\.gitattributes$~i',
+    '~/\.gitmodules$~i',
+    '~/composer\.(json|lock)$~i',
+    '~/package(-lock)?\.json$~i',
+    '~/yarn\.lock$~i',
+    '~/\.DS_Store$~i',
+    '~/Thumbs\.db$~i',
+    '~/web\.config$~i',
+
     // Backup / editor / config files
-    '/\.(bak|backup|old|orig|swp|swo|tmp|log|sql|sqlite|db)$/i',
-    '/~$/i',
-    '/\.(dist|sample|example)$/i',
-    
+    '~/\.(bak|backup|old|orig|swp|swo|tmp|log|sql|sqlite|db)$~i',
+    '~/\.(dist|sample|example)$~i',
+
     // Sensitive directories
-    '/\/(vendor|node_modules|cache|logs?|tmp|storage|backups?)(\/|$)/i',
-    
+    '~/(vendor|node_modules|cache|logs?|tmp|storage|backups?)(/|$)~i',
+
+    // Internal class directory
+    '~/src(/|$)~i',
+
     // PHP files we don't want to serve directly (optional)
-    // '/\.(inc|conf|config|ini|yml|yaml)$/i',
-    
+    // '~/\.(inc|conf|config|ini|yml|yaml)$~i',
+
     // If router.php itself is in the web root
-    '/\/router\.php$/i',
+    '~/router\.php$~i',
 ];
 
 // Check against blocked patterns

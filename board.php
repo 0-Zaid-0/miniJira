@@ -1,9 +1,8 @@
 <?php
 require_once __DIR__ . '/includes/data.php';
 
-$data = load_data();
 $projectId = $_GET['id'] ?? '';
-$project = find_project($data, $projectId);
+$project = find_project($projectId);
 
 if (!$project) {
     $pageTitle = 'Not found';
@@ -13,6 +12,9 @@ if (!$project) {
     require __DIR__ . '/includes/footer.php';
     exit;
 }
+
+$teammates = repo()->teammates();
+$tasks = repo()->tasksForProject($projectId);
 
 $statuses = [
     'todo' => 'Todo',
@@ -26,14 +28,12 @@ $byStatus = [
     'done' => [],
 ];
 
-foreach ($data['tasks'] as $task) {
-    if ($task['project_id'] === $projectId) {
-        $status = $task['status'] ?? 'todo';
-        if (!isset($byStatus[$status])) {
-            $status = 'todo';
-        }
-        $byStatus[$status][] = $task;
+foreach ($tasks as $task) {
+    $status = $task['status'] ?? 'todo';
+    if (!isset($byStatus[$status])) {
+        $status = 'todo';
     }
+    $byStatus[$status][] = $task;
 }
 
 $pageTitle = $project['name'];
@@ -58,7 +58,7 @@ require __DIR__ . '/includes/header.php';
             <?php foreach ($byStatus[$statusKey] as $task): ?>
                 <article class="task">
                     <h3><?= h($task['title']) ?></h3>
-                    <p class="muted"><?= h(find_teammate_name($data, $task['assignee_id'] ?? null)) ?></p>
+                    <p class="muted"><?= h(find_teammate_name($task['assignee_id'] ?? null)) ?></p>
 
                     <form method="post" action="actions.php" class="stack-form">
                         <input type="hidden" name="action" value="move_task">
@@ -85,7 +85,7 @@ require __DIR__ . '/includes/header.php';
                             <input type="text" name="title" value="<?= h($task['title']) ?>" required>
                             <select name="assignee_id">
                                 <option value="">Unassigned</option>
-                                <?php foreach ($data['teammates'] as $teammate): ?>
+                                <?php foreach ($teammates as $teammate): ?>
                                     <option value="<?= h($teammate['id']) ?>" <?= ($task['assignee_id'] ?? '') === $teammate['id'] ? 'selected' : '' ?>>
                                         <?= h($teammate['name']) ?>
                                     </option>
@@ -113,7 +113,7 @@ require __DIR__ . '/includes/header.php';
                     <input type="text" name="title" placeholder="Task title" required>
                     <select name="assignee_id">
                         <option value="">Unassigned</option>
-                        <?php foreach ($data['teammates'] as $teammate): ?>
+                        <?php foreach ($teammates as $teammate): ?>
                             <option value="<?= h($teammate['id']) ?>"><?= h($teammate['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
