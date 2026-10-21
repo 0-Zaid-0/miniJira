@@ -28,15 +28,12 @@ CREATE USER 'minijira_app'@'localhost' IDENTIFIED BY 'replace_with_real_password
 CREATE USER 'minijira_app'@'127.0.0.1' IDENTIFIED BY 'replace_with_real_password';
 GRANT SELECT, INSERT, UPDATE, DELETE ON minijira.* TO 'minijira_app'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE ON minijira.* TO 'minijira_app'@'127.0.0.1';
-
 CREATE USER IF NOT EXISTS 'minijira_migrator'@'localhost' IDENTIFIED BY 'migrator_password';
 CREATE USER IF NOT EXISTS 'minijira_migrator'@'127.0.0.1' IDENTIFIED BY 'migrator_password';
-
 GRANT CREATE, ALTER, DROP, INDEX, REFERENCES, SELECT, INSERT, UPDATE, DELETE
     ON minijira.* TO 'minijira_migrator'@'localhost';
 GRANT CREATE, ALTER, DROP, INDEX, REFERENCES, SELECT, INSERT, UPDATE, DELETE
     ON minijira.* TO 'minijira_migrator'@'127.0.0.1';
-
 FLUSH PRIVILEGES;
 SQL
 
