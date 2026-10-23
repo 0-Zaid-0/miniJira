@@ -5,6 +5,7 @@ if (!isset($pageTitle)) {
 if (!isset($pageSubtitle)) {
     $pageSubtitle = '';
 }
+$me = current_user();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,8 +25,20 @@ if (!isset($pageSubtitle)) {
             <?php endif; ?>
         </div>
         <nav class="nav">
-            <a href="index.php">Projects</a>
-            <a href="teammates.php">Teammates</a>
+            <?php if ($me): ?>
+                <a href="index.php">Projects</a>
+                <a href="teammates.php">Teammates</a>
+                <span class="muted" style="align-self:center;">
+                    Signed in as <strong><?= h($me['username']) ?></strong>
+                </span>
+                <form method="post" action="logout.php" class="inline-form">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn light">Log out</button>
+                </form>
+            <?php else: ?>
+                <a href="login.php">Log in</a>
+                <a href="register.php">Register</a>
+            <?php endif; ?>
         </nav>
     </div>
 </header>

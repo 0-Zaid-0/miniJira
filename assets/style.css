@@ -234,3 +234,113 @@ button, .btn {
 @media (max-width: 900px) {
   .board { grid-template-columns: 1fr; }
 }
+
+/* ---------- Issue tracker ---------- */
+
+.issues-panel {
+  margin-top: 2rem;
+}
+
+.issues-panel > h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.issue-card {
+  border-left: 4px solid #cbd5e1;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0;
+}
+
+.issue-card.issue-sev-low      { border-left-color: #65a30d; }
+.issue-card.issue-sev-medium   { border-left-color: #ca8a04; }
+.issue-card.issue-sev-high     { border-left-color: #ea580c; }
+.issue-card.issue-sev-critical { border-left-color: #b91c1c; }
+
+.issue-card .issue-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.issue-card .issue-head h3 {
+  margin: 0;
+}
+
+.issue-card .issue-meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0.25rem 0;
+}
+
+.issue-card .issue-body {
+  margin: 0.5rem 0;
+  white-space: normal;
+}
+
+.issue-card .issue-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.issue-sev-badge {
+  text-transform: capitalize;
+  font-weight: 700;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.35rem;
+}
+
+.issue-sev-badge.issue-sev-low      { background: #ecfccb; color: #3f6212; }
+.issue-sev-badge.issue-sev-medium   { background: #fef9c3; color: #854d0e; }
+.issue-sev-badge.issue-sev-high     { background: #ffedd5; color: #9a3412; }
+.issue-sev-badge.issue-sev-critical { background: #fee2e2; color: #991b1b; }
+
+.issue-status-open        { color: #0284c7; }
+.issue-status-in_progress { color: #d97706; }
+.issue-status-resolved    { color: #16a34a; }
+.issue-status-closed      { color: var(--muted); }
+
+/* Forms now contain textarea too */
+textarea {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.45rem;
+  font: inherit;
+  min-width: 12rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* ---------- Auth ---------- */
+.stack-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+input[type="password"] {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.45rem;
+  font: inherit;
+  min-width: 12rem;
+}
+
+.topbar .nav form {
+  display: inline;
+}

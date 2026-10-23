@@ -2,6 +2,7 @@
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/data.php';
 
+require_login();
 $teammates = repo()->teammates();
 $pageTitle = 'Teammates';
 $pageSubtitle = 'People you can assign to tasks';
@@ -13,6 +14,7 @@ require __DIR__ . '/includes/header.php';
     <p class="muted">Add people here, then assign them on a project board.</p>
 
     <form class="row-form" method="post" action="actions.php">
+        <?= csrf_field() ?>
         <input type="hidden" name="action" value="add_teammate">
         <input type="text" name="name" placeholder="Teammate name" required>
         <button type="submit">Add teammate</button>
@@ -33,12 +35,14 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <div class="card-actions">
                     <form method="post" action="actions.php" class="inline-form">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="action" value="rename_teammate">
                         <input type="hidden" name="id" value="<?= h($teammate['id']) ?>">
                         <input type="text" name="name" value="<?= h($teammate['name']) ?>" required>
                         <button type="submit" class="btn light">Rename</button>
                     </form>
                     <form method="post" action="actions.php" class="inline-form" onsubmit="return confirm('Remove this teammate?');">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="action" value="delete_teammate">
                         <input type="hidden" name="id" value="<?= h($teammate['id']) ?>">
                         <button type="submit" class="btn danger">Remove</button>
