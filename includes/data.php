@@ -33,8 +33,7 @@ function require_login(): void
 {
     if (current_user() === null) {
         $next = $_SERVER['REQUEST_URI'] ?? '/';
-        header('Location: login.php?next=' . urlencode($next));
-        exit;
+        redirect('login.php?next=' . urlencode($next));
     }
 }
 
@@ -59,12 +58,24 @@ function flash_get(): ?array
     return $flash;
 }
 
+/**
+ * Redirect and stop. Falls back to a meta refresh if output has already
+ * started, so a stray whitespace byte or warning can't produce a blank page.
+ */
 function redirect(string $url, ?string $flashType = null, ?string $flashMessage = null): never
 {
     if ($flashType !== null && $flashMessage !== null) {
         flash_set($flashType, $flashMessage);
     }
-    header('Location: ' . $url);
+
+    if (!headers_sent()) {
+        header('Location: ' . $url);
+        exit;
+    }
+
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        . '<meta http-equiv="refresh" content="0;url=' . h($url) . '">'
+        . '</head><body><p>Redirecting… <a href="' . h($url) . '">continue</a></p></body></html>';
     exit;
 }
 

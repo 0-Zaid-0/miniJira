@@ -3,8 +3,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/data.php';
 
 if (current_user() !== null) {
-    header('Location: index.php');
-    exit;
+    redirect('index.php');
 }
 
 $error = null;
@@ -18,8 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['password'] ?? ''
         );
         auth()->attemptLogin($_POST['username'], $_POST['password']);
-        header('Location: index.php');
-        exit;
+        redirect('index.php');
     } catch (RuntimeException $e) {
         $error = $e->getMessage();
     }

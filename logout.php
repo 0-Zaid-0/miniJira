@@ -11,5 +11,4 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 auth()->verifyCsrf($_POST['_csrf'] ?? null);
 auth()->logout();
-header('Location: login.php');
-exit;
+redirect('login.php');

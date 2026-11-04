@@ -3,8 +3,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/data.php';
 
 if (current_user() !== null) {
-    header('Location: index.php');
-    exit;
+    redirect('index.php');
 }
 
 $error = null;
@@ -22,8 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!preg_match('#^/?[A-Za-z0-9_./?=&%-]*$#', $next)) {
                 $next = 'index.php';
             }
-            header('Location: ' . $next);
-            exit;
+            redirect($next);
         }
         $error = 'Invalid username or password.';
     } catch (RuntimeException $e) {
