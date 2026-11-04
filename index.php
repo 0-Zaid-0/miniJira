@@ -20,6 +20,10 @@ require __DIR__ . '/includes/header.php';
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="add_project">
         <input type="text" name="name" placeholder="Project name" required>
+        <select name="visibility">
+            <option value="private">Private</option>
+            <option value="global">Global</option>
+        </select>
         <button type="submit">New project</button>
     </form>
 </section>
@@ -34,29 +38,53 @@ require __DIR__ . '/includes/header.php';
         <?php foreach (array_reverse($projects) as $project): ?>
             <article class="card">
                 <div class="card-main">
-                    <h2><?= h($project['name']) ?></h2>
+                    <h2>
+                        <?= h($project['name']) ?>
+                        <?php if ($project['visibility'] === 'global'): ?>
+                            <span class="meta-pill">Global</span>
+                        <?php endif; ?>
+                        <?php if (empty($project['is_owner'])): ?>
+                            <span class="meta-pill">Shared</span>
+                        <?php endif; ?>
+                    </h2>
                     <div class="card-meta">
                         <span class="meta-pill">Created <?= h(substr($project['created_at'], 0, 10)) ?></span>
                     </div>
                 </div>
                 <div class="card-actions">
                     <a class="btn" href="board.php?id=<?= urlencode($project['id']) ?>">Open board</a>
-                    <details class="card-menu">
-                        <summary>Manage</summary>
-                        <form method="post" action="actions.php" class="inline-form">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="rename_project">
-                            <input type="hidden" name="id" value="<?= h($project['id']) ?>">
-                            <input type="text" name="name" value="<?= h($project['name']) ?>" required>
-                            <button type="submit" class="btn light">Rename</button>
-                        </form>
-                        <form method="post" action="actions.php" class="inline-form" onsubmit="return confirm('Delete this project and its tasks?');">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="delete_project">
-                            <input type="hidden" name="id" value="<?= h($project['id']) ?>">
-                            <button type="submit" class="btn danger">Delete</button>
-                        </form>
-                    </details>
+                    <?php if (!empty($project['is_owner'])): ?>
+                        <details class="card-menu">
+                            <summary>Manage</summary>
+
+                            <form method="post" action="actions.php" class="inline-form">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="rename_project">
+                                <input type="hidden" name="id" value="<?= h($project['id']) ?>">
+                                <input type="text" name="name" value="<?= h($project['name']) ?>" required>
+                                <button type="submit" class="btn light">Rename</button>
+                            </form>
+
+                            <form method="post" action="actions.php" class="inline-form">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="set_project_visibility">
+                                <input type="hidden" name="id" value="<?= h($project['id']) ?>">
+                                <select name="visibility">
+                                    <option value="private" <?= $project['visibility'] === 'private' ? 'selected' : '' ?>>Private</option>
+                                    <option value="global"  <?= $project['visibility'] === 'global'  ? 'selected' : '' ?>>Global</option>
+                                </select>
+                                <button type="submit" class="btn light">Save visibility</button>
+                            </form>
+
+                            <form method="post" action="actions.php" class="inline-form"
+                                  onsubmit="return confirm('Delete this project and its tasks?');">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="delete_project">
+                                <input type="hidden" name="id" value="<?= h($project['id']) ?>">
+                                <button type="submit" class="btn danger">Delete</button>
+                            </form>
+                        </details>
+                    <?php endif; ?>
                 </div>
             </article>
         <?php endforeach; ?>

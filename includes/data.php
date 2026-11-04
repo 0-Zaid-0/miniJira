@@ -116,17 +116,17 @@ function task_is_overdue(array $task): bool
 
 function find_project(string $id): ?array
 {
-    return repo()->findProject($id);
+    return repo()->findProjectForUser($id, current_user()['id'] ?? '');
 }
 
-function find_teammate_name(?string $id): string
+function user_name(?string $id): string
 {
-    return repo()->teammateName($id);
+    return repo()->userName($id);
 }
 
 function find_issue(string $id): ?array
 {
-    return repo()->findIssue($id);
+    return repo()->findIssueForUser($id, current_user()['id'] ?? '');
 }
 
 function issue_severities(): array

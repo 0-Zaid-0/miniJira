@@ -17,7 +17,7 @@ if (!$project) {
     exit;
 }
 
-$teammates = repo()->teammates();
+$teammates = repo()->teammatesForProject($projectId);
 $tasks = repo()->tasksForProject($projectId, $me['id']);
 $issues = repo()->issuesForProject($projectId, $me['id']);
 
@@ -46,7 +46,12 @@ require __DIR__ . '/includes/header.php';
 
 <div class="board-toolbar">
     <div>
-        <h1><?= h($project['name']) ?></h1>
+        <h1>
+            <?= h($project['name']) ?>
+            <?php if ($project['visibility'] === 'global'): ?>
+                <span class="meta-pill">Global</span>
+            <?php endif; ?>
+        </h1>
         <p class="muted">Drag tasks between columns, or use the status dropdown.</p>
     </div>
     <a class="btn light" href="index.php">All projects</a>
@@ -75,7 +80,7 @@ require __DIR__ . '/includes/header.php';
 
                 <?php foreach ($byStatus[$statusKey] as $task): ?>
                     <?php
-                    $assigneeName = find_teammate_name($task['assignee_id'] ?? null);
+                    $assigneeName = user_name($task['assignee_id'] ?? null);
                     $assigneeInitial = $assigneeName !== 'Unassigned'
                         ? strtoupper(substr($assigneeName, 0, 1))
                         : '?';
@@ -150,7 +155,7 @@ require __DIR__ . '/includes/header.php';
                                         <option value="">Unassigned</option>
                                         <?php foreach ($teammates as $teammate): ?>
                                             <option value="<?= h($teammate['id']) ?>" <?= ($task['assignee_id'] ?? '') === $teammate['id'] ? 'selected' : '' ?>>
-                                                <?= h($teammate['name']) ?>
+                                                <?= h($teammate['username']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -195,7 +200,7 @@ require __DIR__ . '/includes/header.php';
                     <select name="assignee_id">
                         <option value="">Unassigned</option>
                         <?php foreach ($teammates as $teammate): ?>
-                            <option value="<?= h($teammate['id']) ?>"><?= h($teammate['name']) ?></option>
+                            <option value="<?= h($teammate['id']) ?>"><?= h($teammate['username']) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <button type="submit">Add task</button>
@@ -244,7 +249,7 @@ $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open
             <select name="assignee_id">
                 <option value="">Unassigned</option>
                 <?php foreach ($teammates as $teammate): ?>
-                    <option value="<?= h($teammate['id']) ?>"><?= h($teammate['name']) ?></option>
+                    <option value="<?= h($teammate['id']) ?>"><?= h($teammate['username']) ?></option>
                 <?php endforeach; ?>
             </select>
             <button type="submit">Report issue</button>
@@ -270,8 +275,9 @@ $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open
                         <strong class="issue-status-<?= h($issue['status']) ?>">
                             <?= h($issueStatuses[$issue['status']] ?? $issue['status']) ?>
                         </strong>
-                        · Assigned to <?= h(find_teammate_name($issue['assignee_id'])) ?>
-                        · Reported <?= h(substr($issue['created_at'], 0, 10)) ?>
+                        · Assigned to <?= h(user_name($issue['assignee_id'])) ?>
+                        · Reported by <?= h($issue['author_name'] ?? 'Unknown') ?>
+                        · <?= h(substr($issue['created_at'], 0, 10)) ?>
                     </p>
 
                     <?php if (!empty($issue['body'])): ?>
@@ -325,17 +331,98 @@ $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open
                                 <option value="">Unassigned</option>
                                 <?php foreach ($teammates as $teammate): ?>
                                     <option value="<?= h($teammate['id']) ?>" <?= ($issue['assignee_id'] ?? '') === $teammate['id'] ? 'selected' : '' ?>>
-                                        <?= h($teammate['name']) ?>
+                                        <?= h($teammate['username']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                             <button type="submit" class="btn light">Save</button>
                         </form>
                     </details>
+
+                    <?php $comments = repo()->commentsForIssue($issue['id'], $me['id']); ?>
+                    <div class="issue-comments">
+                        <h4>Comments (<?= count($comments) ?>)</h4>
+                        <?php if (count($comments) === 0): ?>
+                            <p class="muted small">No comments yet.</p>
+                        <?php else: ?>
+                            <ul class="comment-list">
+                                <?php foreach ($comments as $c): ?>
+                                    <li class="comment">
+                                        <div class="comment-head">
+                                            <strong><?= h($c['author_name'] ?? 'Unknown') ?></strong>
+                                            <span class="muted small"><?= h(substr($c['created_at'], 0, 16)) ?></span>
+                                            <?php if ($c['author_id'] === $me['id']): ?>
+                                                <form method="post" action="actions.php" class="inline-form"
+                                                      onsubmit="return confirm('Delete this comment?');">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="action" value="delete_comment">
+                                                    <input type="hidden" name="comment_id" value="<?= h($c['id']) ?>">
+                                                    <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+                                                    <button type="submit" class="link-danger">Delete</button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                        <p class="comment-body"><?= nl2br(h($c['body'])) ?></p>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+
+                        <form method="post" action="actions.php" class="stack-form comment-form">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="add_comment">
+                            <input type="hidden" name="issue_id" value="<?= h($issue['id']) ?>">
+                            <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+                            <textarea name="body" rows="2" placeholder="Add a comment…" required></textarea>
+                            <button type="submit" class="btn light">Comment</button>
+                        </form>
+                    </div>
                 </article>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </section>
+
+<?php if (!empty($project['is_owner'])): ?>
+<section class="panel">
+    <h2>Project teammates</h2>
+    <p class="page-lead">Only teammates can be assigned tasks and issues on this project.</p>
+
+    <form class="row-form" method="post" action="actions.php">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="add_project_teammate">
+        <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+        <input type="text" name="username" placeholder="Username to add" required>
+        <button type="submit">Add teammate</button>
+    </form>
+
+    <?php if (count($teammates) === 0): ?>
+        <p class="column-empty">No teammates yet.</p>
+    <?php else: ?>
+        <ul class="list">
+            <?php foreach ($teammates as $t): ?>
+                <li class="card">
+                    <div class="card-main">
+                        <h2>
+                            <span class="avatar" aria-hidden="true"><?= h(strtoupper(substr($t['username'], 0, 1))) ?></span>
+                            <?= h($t['username']) ?>
+                        </h2>
+                    </div>
+                    <div class="card-actions">
+                        <form method="post" action="actions.php" class="inline-form"
+                              onsubmit="return confirm('Remove this teammate and unassign their tasks?');">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="remove_project_teammate">
+                            <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+                            <input type="hidden" name="user_id" value="<?= h($t['id']) ?>">
+                            <button type="submit" class="link-danger">Remove</button>
+                        </form>
+                    </div>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+</section>
+<?php endif; ?>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

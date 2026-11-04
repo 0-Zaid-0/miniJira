@@ -20,8 +20,9 @@ $r = repo();
 switch ($action) {
     case 'add_project':
         $name = trim($_POST['name'] ?? '');
+        $visibility = $_POST['visibility'] ?? 'private';
         if ($name !== '') {
-            $r->insertProject(new_id(), $name, $userId);
+            $r->insertProject(new_id(), $name, $visibility, $userId);
             redirect('index.php', 'success', 'Project created.');
         }
         redirect('index.php', 'error', 'Enter a project name.');
@@ -35,6 +36,15 @@ switch ($action) {
         }
         redirect('index.php', 'error', 'Could not rename project.');
 
+    case 'set_project_visibility':
+        $id = $_POST['id'] ?? '';
+        $visibility = $_POST['visibility'] ?? 'private';
+        if ($id !== '') {
+            $r->setProjectVisibility($id, $visibility, $userId);
+            redirect('index.php', 'success', 'Project visibility updated.');
+        }
+        redirect('index.php');
+
     case 'delete_project':
         $id = $_POST['id'] ?? '';
         if ($id !== '') {
@@ -43,30 +53,36 @@ switch ($action) {
         }
         redirect('index.php');
 
-    case 'add_teammate':
-        $name = trim($_POST['name'] ?? '');
-        if ($name !== '') {
-            $r->insertTeammate(new_id(), $name);
-            redirect('teammates.php', 'success', 'Teammate added.');
+    case 'add_project_teammate':
+        $projectId = $_POST['project_id'] ?? '';
+        $username  = trim($_POST['username'] ?? '');
+        $target    = $username !== '' ? $r->findUserByUsername($username) : null;
+        if ($projectId !== '' && $target) {
+            $r->addProjectTeammate($projectId, $target['id'], $userId);
+            redirect(
+                'board.php?id=' . urlencode($projectId),
+                'success',
+                'Teammate added to project.'
+            );
         }
-        redirect('teammates.php', 'error', 'Enter a teammate name.');
+        redirect(
+            'board.php?id=' . urlencode($projectId),
+            'error',
+            'Could not add teammate. Check the username.'
+        );
 
-    case 'rename_teammate':
-        $id = $_POST['id'] ?? '';
-        $name = trim($_POST['name'] ?? '');
-        if ($id !== '' && $name !== '') {
-            $r->renameTeammate($id, $name);
-            redirect('teammates.php', 'success', 'Teammate renamed.');
+    case 'remove_project_teammate':
+        $projectId = $_POST['project_id'] ?? '';
+        $targetId  = $_POST['user_id'] ?? '';
+        if ($projectId !== '' && $targetId !== '') {
+            $r->removeProjectTeammate($projectId, $targetId, $userId);
+            redirect(
+                'board.php?id=' . urlencode($projectId),
+                'success',
+                'Teammate removed from project.'
+            );
         }
-        redirect('teammates.php', 'error', 'Could not rename teammate.');
-
-    case 'delete_teammate':
-        $id = $_POST['id'] ?? '';
-        if ($id !== '') {
-            $r->deleteTeammate($id);
-            redirect('teammates.php', 'success', 'Teammate removed.');
-        }
-        redirect('teammates.php');
+        redirect('board.php?id=' . urlencode($projectId));
 
     case 'add_task':
         $projectId = $_POST['project_id'] ?? '';
@@ -160,6 +176,7 @@ switch ($action) {
                 $severity,
                 $status,
                 $assigneeId ?: null,
+                $userId,
                 $userId
             );
             redirect('board.php?id=' . urlencode($projectId), 'success', 'Issue reported.');
@@ -218,6 +235,29 @@ switch ($action) {
         if ($issueId !== '') {
             $r->deleteIssue($issueId, $userId);
             redirect('board.php?id=' . urlencode($projectId), 'success', 'Issue deleted.');
+        }
+        redirect('board.php?id=' . urlencode($projectId));
+
+    case 'add_comment':
+        $issueId   = $_POST['issue_id'] ?? '';
+        $projectId = $_POST['project_id'] ?? '';
+        $body      = trim($_POST['body'] ?? '');
+        if ($issueId !== '' && $body !== '') {
+            $r->insertComment($issueId, $userId, $body, $userId);
+            redirect('board.php?id=' . urlencode($projectId), 'success', 'Comment added.');
+        }
+        redirect(
+            'board.php?id=' . urlencode($projectId),
+            'error',
+            'Enter a comment.'
+        );
+
+    case 'delete_comment':
+        $commentId = $_POST['comment_id'] ?? '';
+        $projectId = $_POST['project_id'] ?? '';
+        if ($commentId !== '') {
+            $r->deleteComment($commentId, $userId);
+            redirect('board.php?id=' . urlencode($projectId), 'success', 'Comment deleted.');
         }
         redirect('board.php?id=' . urlencode($projectId));
 }
