@@ -20,8 +20,9 @@ $r = repo();
 switch ($action) {
     case 'add_project':
         $name = trim($_POST['name'] ?? '');
+        $visibility = $_POST['visibility'] ?? 'private';
         if ($name !== '') {
-            $r->insertProject(new_id(), $name, $userId);
+            $r->insertProject(new_id(), $name, $visibility, $userId);
         }
         header('Location: index.php');
         exit;
@@ -35,6 +36,15 @@ switch ($action) {
         header('Location: index.php');
         exit;
 
+    case 'set_project_visibility':
+        $id = $_POST['id'] ?? '';
+        $visibility = $_POST['visibility'] ?? 'private';
+        if ($id !== '') {
+            $r->setProjectVisibility($id, $visibility, $userId);
+        }
+        header('Location: index.php');
+        exit;
+
     case 'delete_project':
         $id = $_POST['id'] ?? '';
         if ($id !== '') {
@@ -43,29 +53,23 @@ switch ($action) {
         header('Location: index.php');
         exit;
 
-    case 'add_teammate':
-        $name = trim($_POST['name'] ?? '');
-        if ($name !== '') {
-            $r->insertTeammate(new_id(), $name);
+    case 'add_project_teammate':
+        $projectId = $_POST['project_id'] ?? '';
+        $username  = trim($_POST['username'] ?? '');
+        $target    = $username !== '' ? $r->findUserByUsername($username) : null;
+        if ($projectId !== '' && $target) {
+            $r->addProjectTeammate($projectId, $target['id'], $userId);
         }
-        header('Location: teammates.php');
+        header('Location: board.php?id=' . urlencode($projectId));
         exit;
 
-    case 'rename_teammate':
-        $id = $_POST['id'] ?? '';
-        $name = trim($_POST['name'] ?? '');
-        if ($id !== '' && $name !== '') {
-            $r->renameTeammate($id, $name);
+    case 'remove_project_teammate':
+        $projectId = $_POST['project_id'] ?? '';
+        $targetId  = $_POST['user_id'] ?? '';
+        if ($projectId !== '' && $targetId !== '') {
+            $r->removeProjectTeammate($projectId, $targetId, $userId);
         }
-        header('Location: teammates.php');
-        exit;
-
-    case 'delete_teammate':
-        $id = $_POST['id'] ?? '';
-        if ($id !== '') {
-            $r->deleteTeammate($id);
-        }
-        header('Location: teammates.php');
+        header('Location: board.php?id=' . urlencode($projectId));
         exit;
 
     case 'add_task':
@@ -134,6 +138,7 @@ switch ($action) {
                 $severity,
                 $status,
                 $assigneeId ?: null,
+                $userId,
                 $userId
             );
         }
@@ -183,6 +188,25 @@ switch ($action) {
         $projectId = $_POST['project_id'] ?? '';
         if ($issueId !== '') {
             $r->deleteIssue($issueId, $userId);
+        }
+        header('Location: board.php?id=' . urlencode($projectId));
+        exit;
+
+    case 'add_comment':
+        $issueId   = $_POST['issue_id'] ?? '';
+        $projectId = $_POST['project_id'] ?? '';
+        $body      = trim($_POST['body'] ?? '');
+        if ($issueId !== '' && $body !== '') {
+            $r->insertComment($issueId, $userId, $body, $userId);
+        }
+        header('Location: board.php?id=' . urlencode($projectId));
+        exit;
+
+    case 'delete_comment':
+        $commentId = $_POST['comment_id'] ?? '';
+        $projectId = $_POST['project_id'] ?? '';
+        if ($commentId !== '') {
+            $r->deleteComment($commentId, $userId);
         }
         header('Location: board.php?id=' . urlencode($projectId));
         exit;
