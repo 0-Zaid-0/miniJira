@@ -55,3 +55,14 @@ $userInitial = $me ? strtoupper(substr($me['username'], 0, 1)) : '';
     </div>
 </header>
 <main class="wrap content">
+<?php
+$flash = flash_get();
+if ($flash):
+    $flashClass = match ($flash['type'] ?? '') {
+        'success' => 'alert-success',
+        'error' => 'alert-error',
+        default => 'alert-info',
+    };
+?>
+    <div class="alert <?= h($flashClass) ?> flash" role="status"><?= h($flash['message'] ?? '') ?></div>
+<?php endif; ?>

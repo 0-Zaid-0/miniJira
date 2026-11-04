@@ -36,6 +36,8 @@ foreach ($tasks as $task) {
     $byStatus[$status][] = $task;
 }
 
+$priorities = task_priorities();
+
 $pageTitle = $project['name'];
 $pageSubtitle = 'Board';
 $currentPage = 'projects';
@@ -77,19 +79,32 @@ require __DIR__ . '/includes/header.php';
                     $assigneeInitial = $assigneeName !== 'Unassigned'
                         ? strtoupper(substr($assigneeName, 0, 1))
                         : '?';
+                    $priority = normalize_priority($task['priority'] ?? null);
+                    $dueDate = $task['due_date'] ?? null;
+                    $overdue = task_is_overdue($task);
                     ?>
                     <article
-                        class="task"
+                        class="task priority-<?= h($priority) ?><?= $overdue ? ' is-overdue' : '' ?>"
                         draggable="true"
                         data-task-id="<?= h($task['id']) ?>"
                         data-status="<?= h($task['status']) ?>"
                     >
                         <div class="task-drag-hint" aria-hidden="true" title="Drag to move"></div>
-                        <h3><?= h($task['title']) ?></h3>
+                        <div class="task-top">
+                            <h3><?= h($task['title']) ?></h3>
+                            <span class="priority-badge priority-<?= h($priority) ?>">
+                                <?= h($priorities[$priority] ?? $priority) ?>
+                            </span>
+                        </div>
                         <p class="task-assignee">
                             <span class="avatar sm" aria-hidden="true"><?= h($assigneeInitial) ?></span>
                             <?= h($assigneeName) ?>
                         </p>
+                        <?php if ($dueDate): ?>
+                            <p class="task-due<?= $overdue ? ' is-overdue' : '' ?>">
+                                Due <?= h($dueDate) ?><?= $overdue ? ' · Overdue' : '' ?>
+                            </p>
+                        <?php endif; ?>
 
                         <div class="task-controls">
                             <form method="post" action="actions.php" class="stack-form" style="margin-top:0;">
@@ -117,6 +132,20 @@ require __DIR__ . '/includes/header.php';
                                     <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
                                     <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
                                     <input type="text" name="title" value="<?= h($task['title']) ?>" required>
+                                    <label>
+                                        Priority
+                                        <select name="priority">
+                                            <?php foreach ($priorities as $key => $label): ?>
+                                                <option value="<?= h($key) ?>" <?= $priority === $key ? 'selected' : '' ?>>
+                                                    <?= h($label) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </label>
+                                    <label>
+                                        Due date
+                                        <input type="date" name="due_date" value="<?= h($dueDate ?? '') ?>">
+                                    </label>
                                     <select name="assignee_id">
                                         <option value="">Unassigned</option>
                                         <?php foreach ($teammates as $teammate): ?>
@@ -149,6 +178,20 @@ require __DIR__ . '/includes/header.php';
                     <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
                     <input type="hidden" name="status" value="<?= h($statusKey) ?>">
                     <input type="text" name="title" placeholder="Task title" required>
+                    <label>
+                        Priority
+                        <select name="priority">
+                            <?php foreach ($priorities as $key => $label): ?>
+                                <option value="<?= h($key) ?>" <?= $key === 'medium' ? 'selected' : '' ?>>
+                                    <?= h($label) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <label>
+                        Due date
+                        <input type="date" name="due_date">
+                    </label>
                     <select name="assignee_id">
                         <option value="">Unassigned</option>
                         <?php foreach ($teammates as $teammate): ?>

@@ -105,11 +105,15 @@ final class Repository
     public function tasksForProject(string $projectId, string $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT t.id, t.project_id, t.title, t.status, t.assignee_id
+            'SELECT t.id, t.project_id, t.title, t.status, t.priority, t.due_date, t.assignee_id
              FROM tasks t
              JOIN projects p ON p.id = t.project_id
              WHERE t.project_id = ? AND p.user_id = ?
-             ORDER BY t.created_at ASC'
+             ORDER BY
+                FIELD(t.priority, "high", "medium", "low"),
+                t.due_date IS NULL,
+                t.due_date ASC,
+                t.created_at ASC'
         );
         $stmt->execute([$projectId, $userId]);
         return $stmt->fetchAll();
@@ -120,13 +124,15 @@ final class Repository
         string $projectId,
         string $title,
         string $status,
+        string $priority,
+        ?string $dueDate,
         ?string $assigneeId,
         string $userId
     ): void {
         // Only insert if the caller owns the project.
         $stmt = $this->pdo->prepare(
-            'INSERT INTO tasks (id, project_id, title, status, assignee_id, created_at)
-             SELECT ?, ?, ?, ?, ?, ?
+            'INSERT INTO tasks (id, project_id, title, status, priority, due_date, assignee_id, created_at)
+             SELECT ?, ?, ?, ?, ?, ?, ?, ?
              FROM projects WHERE id = ? AND user_id = ?'
         );
         $stmt->execute([
@@ -134,6 +140,8 @@ final class Repository
             $projectId,
             $title,
             $status,
+            $priority,
+            $dueDate,
             $assigneeId ?: null,
             gmdate('Y-m-d H:i:s'),
             $projectId,
@@ -141,15 +149,21 @@ final class Repository
         ]);
     }
 
-    public function updateTask(string $taskId, string $title, ?string $assigneeId, string $userId): void
-    {
+    public function updateTask(
+        string $taskId,
+        string $title,
+        string $priority,
+        ?string $dueDate,
+        ?string $assigneeId,
+        string $userId
+    ): void {
         $stmt = $this->pdo->prepare(
             'UPDATE tasks t
              JOIN projects p ON p.id = t.project_id
-             SET t.title = ?, t.assignee_id = ?
+             SET t.title = ?, t.priority = ?, t.due_date = ?, t.assignee_id = ?
              WHERE t.id = ? AND p.user_id = ?'
         );
-        $stmt->execute([$title, $assigneeId ?: null, $taskId, $userId]);
+        $stmt->execute([$title, $priority, $dueDate, $assigneeId ?: null, $taskId, $userId]);
     }
 
     public function moveTask(string $taskId, string $status, string $userId): void
