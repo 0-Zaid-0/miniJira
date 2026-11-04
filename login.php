@@ -19,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         if ($ok) {
             $next = $_POST['next'] ?? 'index.php';
-            // only allow same-origin relative redirects
             if (!preg_match('#^/?[A-Za-z0-9_./?=&%-]*$#', $next)) {
                 $next = 'index.php';
             }
@@ -34,17 +33,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $next = $_GET['next'] ?? '';
 $pageTitle = 'Log in';
-$pageSubtitle = 'Welcome back';
+$pageSubtitle = '';
+$currentPage = 'login';
+$authLayout = true;
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="panel" style="max-width: 28rem; margin: 0 auto;">
+<section class="panel auth-panel">
     <h1>Log in</h1>
+    <p class="page-lead">Welcome back. Sign in to open your boards.</p>
 
     <?php if ($error): ?>
-        <p class="note" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;">
-            <?= h($error) ?>
-        </p>
+        <p class="alert alert-error"><?= h($error) ?></p>
     <?php endif; ?>
 
     <form method="post" class="stack-form">
@@ -62,7 +62,7 @@ require __DIR__ . '/includes/header.php';
         <button type="submit">Log in</button>
     </form>
 
-    <p class="muted" style="margin-top:1rem;">
+    <p class="muted auth-switch">
         No account? <a href="register.php">Register</a>
     </p>
 </section>

@@ -5,7 +5,15 @@ if (!isset($pageTitle)) {
 if (!isset($pageSubtitle)) {
     $pageSubtitle = '';
 }
+if (!isset($currentPage)) {
+    $currentPage = '';
+}
+if (!isset($authLayout)) {
+    $authLayout = false;
+}
 $me = current_user();
+$bodyClass = $authLayout ? 'auth-page' : '';
+$userInitial = $me ? strtoupper(substr($me['username'], 0, 1)) : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,29 +23,33 @@ $me = current_user();
     <title><?= h($pageTitle) ?> — Mini Jira</title>
     <link rel="stylesheet" href="assets/style.css">
 </head>
-<body>
+<body class="<?= h($bodyClass) ?>">
 <header class="topbar">
     <div class="wrap topbar-inner">
-        <div>
-            <a class="brand" href="index.php">Mini Jira <span class="badge badge-new">NEW UPDATE</span></a>
+        <div class="brand-block">
+            <a class="brand" href="<?= $me ? 'index.php' : 'login.php' ?>">
+                <span class="brand-mark" aria-hidden="true"></span>
+                Mini Jira
+            </a>
             <?php if ($pageSubtitle !== ''): ?>
                 <p class="subtitle"><?= h($pageSubtitle) ?></p>
             <?php endif; ?>
         </div>
-        <nav class="nav">
+        <nav class="nav" aria-label="Main">
             <?php if ($me): ?>
-                <a href="index.php">Projects</a>
-                <a href="teammates.php">Teammates</a>
-                <span class="muted" style="align-self:center;">
-                    Signed in as <strong><?= h($me['username']) ?></strong>
+                <a href="index.php" class="<?= $currentPage === 'projects' ? 'is-active' : '' ?>">Projects</a>
+                <a href="teammates.php" class="<?= $currentPage === 'teammates' ? 'is-active' : '' ?>">Teammates</a>
+                <span class="user-chip" title="Signed in">
+                    <span class="avatar" aria-hidden="true"><?= h($userInitial) ?></span>
+                    <?= h($me['username']) ?>
                 </span>
                 <form method="post" action="logout.php" class="inline-form">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn light">Log out</button>
                 </form>
             <?php else: ?>
-                <a href="login.php">Log in</a>
-                <a href="register.php">Register</a>
+                <a href="login.php" class="<?= $currentPage === 'login' ? 'is-active' : '' ?>">Log in</a>
+                <a href="register.php" class="<?= $currentPage === 'register' ? 'is-active' : '' ?>">Register</a>
             <?php endif; ?>
         </nav>
     </div>

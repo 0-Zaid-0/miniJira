@@ -13,11 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     auth()->verifyCsrf($_POST['_csrf'] ?? null);
 
     try {
-        $id = auth()->register(
+        auth()->register(
             $_POST['username'] ?? '',
             $_POST['password'] ?? ''
         );
-        // Log them in immediately
         auth()->attemptLogin($_POST['username'], $_POST['password']);
         header('Location: index.php');
         exit;
@@ -27,17 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Register';
-$pageSubtitle = 'Create an account';
+$pageSubtitle = '';
+$currentPage = 'register';
+$authLayout = true;
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="panel" style="max-width: 28rem; margin: 0 auto;">
-    <h1>Register</h1>
+<section class="panel auth-panel">
+    <h1>Create account</h1>
+    <p class="page-lead">Pick a username and password to start tracking work.</p>
 
     <?php if ($error): ?>
-        <p class="note" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;">
-            <?= h($error) ?>
-        </p>
+        <p class="alert alert-error"><?= h($error) ?></p>
     <?php endif; ?>
 
     <form method="post" class="stack-form">
@@ -54,7 +54,7 @@ require __DIR__ . '/includes/header.php';
         <button type="submit">Create account</button>
     </form>
 
-    <p class="muted" style="margin-top:1rem;">
+    <p class="muted auth-switch">
         Already have an account? <a href="login.php">Log in</a>
     </p>
 </section>
