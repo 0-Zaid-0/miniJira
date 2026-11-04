@@ -45,85 +45,101 @@ require __DIR__ . '/includes/header.php';
 <div class="board-toolbar">
     <div>
         <h1><?= h($project['name']) ?></h1>
-        <p class="muted">Move tasks with the status dropdown. Track bugs in Issues below.</p>
+        <p class="muted">Drag tasks between columns, or use the status dropdown.</p>
     </div>
     <a class="btn light" href="index.php">All projects</a>
 </div>
 
-<div class="board">
+<form id="move-task-form" method="post" action="actions.php" hidden>
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="move_task">
+    <input type="hidden" name="task_id" value="">
+    <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+    <input type="hidden" name="status" value="">
+</form>
+
+<div class="board" data-project-id="<?= h($projectId) ?>">
     <?php foreach ($statuses as $statusKey => $statusLabel): ?>
-        <section class="column column-<?= h($statusKey) ?>">
+        <section class="column column-<?= h($statusKey) ?>" data-status="<?= h($statusKey) ?>">
             <header class="column-head">
                 <h2><?= h($statusLabel) ?></h2>
                 <span class="count"><?= count($byStatus[$statusKey]) ?></span>
             </header>
 
-            <?php if (count($byStatus[$statusKey]) === 0): ?>
-                <p class="column-empty">No tasks here</p>
-            <?php endif; ?>
+            <div class="column-body">
+                <?php if (count($byStatus[$statusKey]) === 0): ?>
+                    <p class="column-empty">No tasks here</p>
+                <?php endif; ?>
 
-            <?php foreach ($byStatus[$statusKey] as $task): ?>
-                <?php
-                $assigneeName = find_teammate_name($task['assignee_id'] ?? null);
-                $assigneeInitial = $assigneeName !== 'Unassigned'
-                    ? strtoupper(substr($assigneeName, 0, 1))
-                    : '?';
-                ?>
-                <article class="task">
-                    <h3><?= h($task['title']) ?></h3>
-                    <p class="task-assignee">
-                        <span class="avatar sm" aria-hidden="true"><?= h($assigneeInitial) ?></span>
-                        <?= h($assigneeName) ?>
-                    </p>
+                <?php foreach ($byStatus[$statusKey] as $task): ?>
+                    <?php
+                    $assigneeName = find_teammate_name($task['assignee_id'] ?? null);
+                    $assigneeInitial = $assigneeName !== 'Unassigned'
+                        ? strtoupper(substr($assigneeName, 0, 1))
+                        : '?';
+                    ?>
+                    <article
+                        class="task"
+                        draggable="true"
+                        data-task-id="<?= h($task['id']) ?>"
+                        data-status="<?= h($task['status']) ?>"
+                    >
+                        <div class="task-drag-hint" aria-hidden="true" title="Drag to move"></div>
+                        <h3><?= h($task['title']) ?></h3>
+                        <p class="task-assignee">
+                            <span class="avatar sm" aria-hidden="true"><?= h($assigneeInitial) ?></span>
+                            <?= h($assigneeName) ?>
+                        </p>
 
-                    <div class="task-controls">
-                        <form method="post" action="actions.php" class="stack-form" style="margin-top:0;">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="move_task">
-                            <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
-                            <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
-                            <label>
-                                Status
-                                <select name="status" onchange="this.form.submit()">
-                                    <?php foreach ($statuses as $key => $label): ?>
-                                        <option value="<?= h($key) ?>" <?= $task['status'] === $key ? 'selected' : '' ?>>
-                                            <?= h($label) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-                        </form>
-
-                        <details>
-                            <summary>Edit</summary>
-                            <form method="post" action="actions.php" class="stack-form">
+                        <div class="task-controls">
+                            <form method="post" action="actions.php" class="stack-form" style="margin-top:0;">
                                 <?= csrf_field() ?>
-                                <input type="hidden" name="action" value="update_task">
+                                <input type="hidden" name="action" value="move_task">
                                 <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
                                 <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
-                                <input type="text" name="title" value="<?= h($task['title']) ?>" required>
-                                <select name="assignee_id">
-                                    <option value="">Unassigned</option>
-                                    <?php foreach ($teammates as $teammate): ?>
-                                        <option value="<?= h($teammate['id']) ?>" <?= ($task['assignee_id'] ?? '') === $teammate['id'] ? 'selected' : '' ?>>
-                                            <?= h($teammate['name']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button type="submit" class="btn light">Save</button>
+                                <label>
+                                    Status
+                                    <select name="status" onchange="this.form.submit()">
+                                        <?php foreach ($statuses as $key => $label): ?>
+                                            <option value="<?= h($key) ?>" <?= $task['status'] === $key ? 'selected' : '' ?>>
+                                                <?= h($label) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
                             </form>
-                        </details>
 
-                        <form method="post" action="actions.php" onsubmit="return confirm('Delete this task?');">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="delete_task">
-                            <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
-                            <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
-                            <button type="submit" class="link-danger">Delete</button>
-                        </form>
-                    </div>
-                </article>
-            <?php endforeach; ?>
+                            <details>
+                                <summary>Edit</summary>
+                                <form method="post" action="actions.php" class="stack-form">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="update_task">
+                                    <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
+                                    <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+                                    <input type="text" name="title" value="<?= h($task['title']) ?>" required>
+                                    <select name="assignee_id">
+                                        <option value="">Unassigned</option>
+                                        <?php foreach ($teammates as $teammate): ?>
+                                            <option value="<?= h($teammate['id']) ?>" <?= ($task['assignee_id'] ?? '') === $teammate['id'] ? 'selected' : '' ?>>
+                                                <?= h($teammate['name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="submit" class="btn light">Save</button>
+                                </form>
+                            </details>
+
+                            <form method="post" action="actions.php" onsubmit="return confirm('Delete this task?');">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="delete_task">
+                                <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
+                                <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+                                <button type="submit" class="link-danger">Delete</button>
+                            </form>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
 
             <details class="add-task">
                 <summary>+ Add task</summary>
@@ -145,6 +161,8 @@ require __DIR__ . '/includes/header.php';
         </section>
     <?php endforeach; ?>
 </div>
+
+<script src="assets/board.js" defer></script>
 
 <?php
 $issueSeverities = issue_severities();
