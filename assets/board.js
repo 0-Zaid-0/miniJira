@@ -3,7 +3,7 @@
   const moveForm = document.getElementById("move-task-form");
   if (!board || !moveForm) return;
 
-  const interactive = "input, select, textarea, button, a, summary, label, details";
+  const interactive = "input, select, textarea, button, a, summary, label, details, .task-actions";
   let dragTask = null;
 
   function clearDropState() {

@@ -37,6 +37,11 @@ foreach ($tasks as $task) {
 }
 
 $priorities = task_priorities();
+$overdueCount = count(array_filter($tasks, fn($t) => task_is_overdue($t)));
+$openIssuesCount = count(array_filter(
+    $issues,
+    fn($i) => in_array($i['status'], ['open', 'in_progress'], true)
+));
 
 $pageTitle = $project['name'];
 $pageSubtitle = 'Board';
@@ -49,12 +54,46 @@ require __DIR__ . '/includes/header.php';
         <h1>
             <?= h($project['name']) ?>
             <?php if ($project['visibility'] === 'global'): ?>
-                <span class="meta-pill">Global</span>
+                <span class="badge-pill badge-global">Global</span>
+            <?php else: ?>
+                <span class="badge-pill badge-private">Private</span>
             <?php endif; ?>
         </h1>
         <p class="muted">Drag tasks between columns, or use the status dropdown.</p>
     </div>
-    <a class="btn light" href="index.php">All projects</a>
+    <div class="board-toolbar-actions">
+        <nav class="jump-nav" aria-label="On this page">
+            <a href="#board">Board</a>
+            <a href="#issues">Issues</a>
+            <?php if (!empty($project['is_owner'])): ?>
+                <a href="#teammates">Teammates</a>
+            <?php endif; ?>
+        </nav>
+        <a class="btn light" href="index.php">All projects</a>
+    </div>
+</div>
+
+<div class="stat-row board-stats" aria-label="Board summary">
+    <div class="stat-chip">
+        <span class="stat-value"><?= count($byStatus['todo']) ?></span>
+        <span class="stat-label">Todo</span>
+    </div>
+    <div class="stat-chip">
+        <span class="stat-value"><?= count($byStatus['in_progress']) ?></span>
+        <span class="stat-label">In progress</span>
+    </div>
+    <div class="stat-chip">
+        <span class="stat-value"><?= count($byStatus['done']) ?></span>
+        <span class="stat-label">Done</span>
+    </div>
+    <div class="stat-chip<?= $overdueCount > 0 ? ' is-warn' : '' ?>">
+        <span class="stat-value"><?= $overdueCount ?></span>
+        <span class="stat-label">Overdue</span>
+    </div>
+    <div class="stat-chip">
+        <span class="stat-value"><?= $openIssuesCount ?></span>
+        <span class="stat-label">Open issues</span>
+    </div>
 </div>
 
 <form id="move-task-form" method="post" action="actions.php" hidden>
@@ -65,7 +104,7 @@ require __DIR__ . '/includes/header.php';
     <input type="hidden" name="status" value="">
 </form>
 
-<div class="board" data-project-id="<?= h($projectId) ?>">
+<div id="board" class="board" data-project-id="<?= h($projectId) ?>">
     <?php foreach ($statuses as $statusKey => $statusLabel): ?>
         <section class="column column-<?= h($statusKey) ?>" data-status="<?= h($statusKey) ?>">
             <header class="column-head">
@@ -75,7 +114,7 @@ require __DIR__ . '/includes/header.php';
 
             <div class="column-body">
                 <?php if (count($byStatus[$statusKey]) === 0): ?>
-                    <p class="column-empty">No tasks here</p>
+                    <p class="column-empty">Drop tasks here</p>
                 <?php endif; ?>
 
                 <?php foreach ($byStatus[$statusKey] as $task): ?>
@@ -101,36 +140,38 @@ require __DIR__ . '/includes/header.php';
                                 <?= h($priorities[$priority] ?? $priority) ?>
                             </span>
                         </div>
-                        <p class="task-assignee">
-                            <span class="avatar sm" aria-hidden="true"><?= h($assigneeInitial) ?></span>
-                            <?= h($assigneeName) ?>
-                        </p>
-                        <?php if ($dueDate): ?>
-                            <p class="task-due<?= $overdue ? ' is-overdue' : '' ?>">
-                                Due <?= h($dueDate) ?><?= $overdue ? ' · Overdue' : '' ?>
+                        <div class="task-meta-row">
+                            <p class="task-assignee">
+                                <span class="avatar sm" aria-hidden="true"><?= h($assigneeInitial) ?></span>
+                                <?= h($assigneeName) ?>
                             </p>
-                        <?php endif; ?>
+                            <?php if ($dueDate): ?>
+                                <p class="task-due<?= $overdue ? ' is-overdue' : '' ?>">
+                                    <?= $overdue ? 'Overdue · ' : 'Due ' ?><?= h($dueDate) ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
 
-                        <div class="task-controls">
-                            <form method="post" action="actions.php" class="stack-form" style="margin-top:0;">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="action" value="move_task">
-                                <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
-                                <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
-                                <label>
-                                    Status
-                                    <select name="status" onchange="this.form.submit()">
-                                        <?php foreach ($statuses as $key => $label): ?>
-                                            <option value="<?= h($key) ?>" <?= $task['status'] === $key ? 'selected' : '' ?>>
-                                                <?= h($label) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </label>
-                            </form>
+                        <details class="task-actions">
+                            <summary>Actions</summary>
+                            <div class="task-controls">
+                                <form method="post" action="actions.php" class="stack-form" style="margin-top:0;">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="move_task">
+                                    <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
+                                    <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+                                    <label>
+                                        Status
+                                        <select name="status" onchange="this.form.submit()">
+                                            <?php foreach ($statuses as $key => $label): ?>
+                                                <option value="<?= h($key) ?>" <?= $task['status'] === $key ? 'selected' : '' ?>>
+                                                    <?= h($label) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </label>
+                                </form>
 
-                            <details>
-                                <summary>Edit</summary>
                                 <form method="post" action="actions.php" class="stack-form">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="action" value="update_task">
@@ -161,16 +202,16 @@ require __DIR__ . '/includes/header.php';
                                     </select>
                                     <button type="submit" class="btn light">Save</button>
                                 </form>
-                            </details>
 
-                            <form method="post" action="actions.php" onsubmit="return confirm('Delete this task?');">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="action" value="delete_task">
-                                <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
-                                <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
-                                <button type="submit" class="link-danger">Delete</button>
-                            </form>
-                        </div>
+                                <form method="post" action="actions.php" onsubmit="return confirm('Delete this task?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="delete_task">
+                                    <input type="hidden" name="task_id" value="<?= h($task['id']) ?>">
+                                    <input type="hidden" name="project_id" value="<?= h($projectId) ?>">
+                                    <button type="submit" class="link-danger">Delete</button>
+                                </form>
+                            </div>
+                        </details>
                     </article>
                 <?php endforeach; ?>
             </div>
@@ -218,7 +259,7 @@ $issueStatuses   = issue_statuses();
 $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open', 'in_progress'], true));
 ?>
 
-<section class="panel issues-panel">
+<section id="issues" class="panel issues-panel">
     <h2>
         Issues
         <span class="count"><?= count($openIssues) ?> open / <?= count($issues) ?> total</span>
@@ -340,8 +381,8 @@ $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open
                     </details>
 
                     <?php $comments = repo()->commentsForIssue($issue['id'], $me['id']); ?>
-                    <div class="issue-comments">
-                        <h4>Comments (<?= count($comments) ?>)</h4>
+                    <details class="issue-comments" <?= count($comments) > 0 ? '' : '' ?>>
+                        <summary>Comments (<?= count($comments) ?>)</summary>
                         <?php if (count($comments) === 0): ?>
                             <p class="muted small">No comments yet.</p>
                         <?php else: ?>
@@ -349,6 +390,7 @@ $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open
                                 <?php foreach ($comments as $c): ?>
                                     <li class="comment">
                                         <div class="comment-head">
+                                            <span class="avatar sm" aria-hidden="true"><?= h(strtoupper(substr($c['author_name'] ?? '?', 0, 1))) ?></span>
                                             <strong><?= h($c['author_name'] ?? 'Unknown') ?></strong>
                                             <span class="muted small"><?= h(substr($c['created_at'], 0, 16)) ?></span>
                                             <?php if ($c['author_id'] === $me['id']): ?>
@@ -376,7 +418,7 @@ $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open
                             <textarea name="body" rows="2" placeholder="Add a comment…" required></textarea>
                             <button type="submit" class="btn light">Comment</button>
                         </form>
-                    </div>
+                    </details>
                 </article>
             <?php endforeach; ?>
         </div>
@@ -384,7 +426,7 @@ $openIssues      = array_filter($issues, fn($i) => in_array($i['status'], ['open
 </section>
 
 <?php if (!empty($project['is_owner'])): ?>
-<section class="panel">
+<section id="teammates" class="panel">
     <h2>Project teammates</h2>
     <p class="page-lead">Only teammates can be assigned tasks and issues on this project.</p>
 

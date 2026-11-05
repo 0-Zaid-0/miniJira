@@ -38,7 +38,7 @@ $userInitial = $me ? strtoupper(substr($me['username'], 0, 1)) : '';
         <nav class="nav" aria-label="Main">
             <?php if ($me): ?>
                 <a href="index.php" class="<?= $currentPage === 'projects' ? 'is-active' : '' ?>">Projects</a>
-                <a href="teammates.php" class="<?= $currentPage === 'teammates' ? 'is-active' : '' ?>">Teammates</a>
+                <a href="teammates.php" class="<?= $currentPage === 'teammates' ? 'is-active' : '' ?>">People</a>
                 <span class="user-chip" title="Signed in">
                     <span class="avatar" aria-hidden="true"><?= h($userInitial) ?></span>
                     <?= h($me['username']) ?>

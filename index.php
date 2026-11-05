@@ -5,6 +5,8 @@ require_once __DIR__ . '/includes/data.php';
 require_login();
 $me = current_user();
 $projects = repo()->projectsForUser($me['id']);
+$ownedCount = count(array_filter($projects, fn($p) => !empty($p['is_owner'])));
+$sharedCount = count($projects) - $ownedCount;
 
 $pageTitle = 'Projects';
 $pageSubtitle = 'Your workspace';
@@ -12,15 +14,33 @@ $currentPage = 'projects';
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="panel">
-    <h1>Projects</h1>
-    <p class="page-lead">Create a project, then open its board to track tasks and issues.</p>
+<section class="panel hero-panel">
+    <div class="hero-copy">
+        <h1>Projects</h1>
+        <p class="page-lead">Create a project, then open its board to track tasks and issues.</p>
+    </div>
+    <?php if (count($projects) > 0): ?>
+        <div class="stat-row" aria-label="Workspace summary">
+            <div class="stat-chip">
+                <span class="stat-value"><?= count($projects) ?></span>
+                <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-chip">
+                <span class="stat-value"><?= $ownedCount ?></span>
+                <span class="stat-label">Owned</span>
+            </div>
+            <div class="stat-chip">
+                <span class="stat-value"><?= $sharedCount ?></span>
+                <span class="stat-label">Shared</span>
+            </div>
+        </div>
+    <?php endif; ?>
 
-    <form class="row-form" method="post" action="actions.php">
+    <form class="row-form create-form" method="post" action="actions.php">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="add_project">
         <input type="text" name="name" placeholder="Project name" required>
-        <select name="visibility">
+        <select name="visibility" aria-label="Visibility">
             <option value="private">Private</option>
             <option value="global">Global</option>
         </select>
@@ -30,24 +50,27 @@ require __DIR__ . '/includes/header.php';
 
 <?php if (count($projects) === 0): ?>
     <section class="empty">
+        <div class="empty-icon" aria-hidden="true"></div>
         <h2>No projects yet</h2>
         <p class="muted">Create your first project above to get started.</p>
     </section>
 <?php else: ?>
-    <section class="list">
+    <section class="list project-list">
         <?php foreach (array_reverse($projects) as $project): ?>
-            <article class="card">
+            <article class="card project-card">
                 <div class="card-main">
-                    <h2>
-                        <?= h($project['name']) ?>
+                    <h2><?= h($project['name']) ?></h2>
+                    <div class="card-meta">
                         <?php if ($project['visibility'] === 'global'): ?>
-                            <span class="meta-pill">Global</span>
+                            <span class="badge-pill badge-global">Global</span>
+                        <?php else: ?>
+                            <span class="badge-pill badge-private">Private</span>
                         <?php endif; ?>
                         <?php if (empty($project['is_owner'])): ?>
-                            <span class="meta-pill">Shared</span>
+                            <span class="badge-pill badge-shared">Shared</span>
+                        <?php else: ?>
+                            <span class="badge-pill badge-owner">Owner</span>
                         <?php endif; ?>
-                    </h2>
-                    <div class="card-meta">
                         <span class="meta-pill">Created <?= h(substr($project['created_at'], 0, 10)) ?></span>
                     </div>
                 </div>
